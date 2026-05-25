@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حل مكعب روبيك 3×3</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --card: #161616; 
+    --border: #2a2a2a;
+    --accent: #f5c518;
+    --accent2: #e05c00;
+    --text: #f0f0f0;
+    --muted: #888;
+    --white: #fff;
+    --blue: #3a8eff;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --orange: #f39c12;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  header h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: -1px;
+    line-height: 1.2;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 6px;
+  }
+
+  /* رموز المفاتيح */
+  .legend {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    max-width: 700px;
+    margin-inline: auto;
+  }
+
+  .legend h3 {
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .legend-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1e1e1e;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.82rem;
+  }
+
+  .leg-key {
+    background: var(--accent);
+    color: #000;
+    font-weight: 900;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.85rem;
+  }
+
+  .leg-note {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+
+  /* المراحل */
+  .stages { max-width: 700px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+
+  .stage {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+
+  .stage:hover { border-color: #444; }
+
+  .stage-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .stage-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .stage-title { font-weight: 700; font-size: 1rem; flex: 1; }
+  .stage-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 1.2rem;
+    transition: transform .25s;
+    flex-shrink: 0;
+  }
+
+  .stage.open .chevron { transform: rotate(180deg); }
+
+  .stage-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .stage.open .stage-body { display: block; }
+
+  .part {
+    margin-bottom: 20px;
+  }
+
+  .part:last-child { margin-bottom: 0; }
+
+  .part-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .steps { display: flex; flex-direction: column; gap: 8px; }
+
+  .step {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  .step-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .note {
+    background: #1a1500;
+    border-right: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    color: #c9a800;
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+
+  .note strong { color: var(--accent); }
+
+  /* الخوارزميات */
+  .algo-box {
+    background: #0a1520;
+    border: 1px solid #1a3a5c;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 8px;
+  }
+
+  .algo-label {
+    font-size: 0.72rem;
+    color: var(--blue);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .algo {
+    font-family: 'Cairo', monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 2px;
+    direction: ltr;
+    text-align: center;
+  }
+
+  .algo span.dot { color: var(--accent2); }
+
+  /* ألوان المراحل */
+  .c1 .stage-num { background: #fff2; color: var(--white); border: 2px solid #fff4; }
+  .c2 .stage-num { background: #fff1; color: var(--white); border: 2px solid #fff3; }
+  .c3 .stage-num { background: #0e2a1a; color: var(--green); border: 2px solid #1a4a2a; }
+  .c4 .stage-num { background: #2a1a00; color: var(--orange); border: 2px solid #4a2e00; }
+  .c5 .stage-num { background: #1a0a0a; color: var(--red); border: 2px solid #3a1010; }
+
+  .c1 .stage-title { color: #ddd; }
+  .c2 .stage-title { color: #ddd; }
+  .c3 .stage-title { color: var(--green); }
+  .c4 .stage-title { color: var(--orange); }
+  .c5 .stage-title { color: var(--red); }
+
+  /* badge */
+  .badge {
+    display: inline-block;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .orient-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #1a1020;
+    border: 1px solid #2a1a40;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    color: #b090ff;
+    margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎲 حل مكعب روبيك 3×3</h1>
+  <p>5 مراحل · خطوات مبسطة وواضحة</p>
+</header>
+
+<!-- مفاتيح الرموز -->
+<div class="legend">
+  <h3>🔑 مفاتيح الرموز</h3>
+  <div class="legend-grid">
+    <div class="leg-item"><span class="leg-key">أ</span> الوجه الأمامى</div>
+    <div class="leg-item"><span class="leg-key">ع</span> الوجه العلوى</div>
+    <div class="leg-item"><span class="leg-key">ى</span> الوجه الأيمن</div>
+    <div class="leg-item"><span class="leg-key">س</span> الوجه السفلى</div>
+    <div class="leg-item"><span class="leg-key">و</span> الطبقة الوسطى العمودية</div>
+  </div>
+  <div class="leg-note"><span style="color:#f0f0f0;">⟳ بدون نقطة = باتجاه الساعة</span> &nbsp;|&nbsp; <span style="color:#e05c00;">⟲ • بعد الحرف = عكس اتجاه الساعة</span></div>
+</div>
+
+<div class="stages">
+
+  <!-- المرحلة 1 -->
+  <div class="stage c1 open" onclick="toggle(this)">
+    <div class="stage-header">
+      <div class="stage-num">١</div>
+      <div>
+        <div class="stage-title">علامة الزائد الأبيض ✚</div>
+        <div class="stage-sub">الوجه الأصفر بالأعلى</div>
+      </div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="part">
+        <div class="part-label">الجزء ١ — علامة الزائد فى الوجه الأصفر</div>
+        <div class="orient-badge">🧭 الوجه الأصفر بالأعلى</div>
+        <div class="steps">
+          <div class="step"><div class="step-dot">١</div><div>ابحث فى الأوجه الأمامية عن  'خلية بيضاء' فى 'علامة الزائد' ← لو <strong>أفقية</strong> ارفعها للأعلى مباشرةً</div></div>
+          <div class="step"><div class="step-dot">٢</div><div>لو الخلية البيضاء <strong>عمودية</strong> ← لفّ الوجه الأمامى لتصبح أفقية ثم ارفعها للأعلى</div></div>
+          <div class="step"><div class="step-dot">٣</div><div>لو الأبيض <strong>فى الأسفل</strong> ← لفّ الوجه مرتين للأعلى • لو يقابلها أبيض لفّ العلوى لتفريغ مساحة</div></div>
+        </div>
+      </div>
+
+      <div class="part">
+        <div class="part-label">الجزء ٢ — علامة الزائد فى الوجه الأبيض</div>
+        <div class="note"><strong>ملحوظة:</strong> تخطى الجزء الأول — لو الزائد الأبيض فى الوجه الأصفر</div>
+        <div class="steps" style="margin-top:8px">
+          <div class="step"><div class="step-dot">١</div><div>لفّ الطبقة العلوية حتى يتطابق لون الحافة الأمامية مع لون الوجه</div></div>
+          <div class="step"><div class="step-dot">٢</div><div>لفّ الوجه الأمامى مرتين حتى ينزل الزائد إلى الوجه الأبيض</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- المرحلة 2 -->
+  <div class="stage c2" onclick="toggle(this)">
+    <div class="stage-header">
+      <div class="stage-num">٢</div>
+      <div>
+        <div class="stage-title">الوجه الأبيض الكامل + حرف T</div>
+        <div class="stage-sub">الوجه الأبيض على اليسار</div>
+      </div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="stage-body">
+      <div class="orient-badge">🧭 الوجه الأبيض على اليسار</div>
+      <div class="steps">
+        <div class="step"><div class="step-dot">١</div><div>ابحث فى الأوجه العلوية عن زاوية بيضاء فى اليمين — لونها الأمامى أو الخلفى مطابق للوجه</div></div>
+      </div>
+
+      <div class="part" style="margin-top:14px">
+        <div class="badge">أ — الخلية فى الزاوية البعيدة </div>
+        <div class="steps">
+          <div class="step"><div class="step-dot">١</div><div>لفّ الوجه العلوى لتقريب الزاوية</div></div>
+          <div class="step"><div class="step-dot">٢</div><div>لفّ الوجه الأيمن لتكملة الصف الأبيض</div></div>
+          <div class="step"><div class="step-dot">٣</div><div>لفّ الوجه العلوى عكساً لإرجاع الطبقة مكانها</div></div>
+        </div>
+      </div>
+
+      <div class="part">
+        <div class="badge">ب — الخلية فى الزاويا القريبة</div>
+        <div class="steps">
+          <div class="step"><div class="step-dot">١</div><div>لفّ الجزء العلوى عكساً لإبعاد الخلية</div></div>
+          <div class="step"><div class="step-dot">٢</div><div>لفّ الوجه الأيمن عكساً لتكملة الصف الأبيض</div></div>
+          <div class="step"><div class="step-dot">٣</div><div>لفّ الوجه العلوى لإرجاع الطبقة مكانها</div></div>
+        </div>
+      </div>
+
+      <div class="note">• لو لم يكتمل الوجه ← ستجد الزاوية البيضاء داخل الوجه الأيمن<br>• ضعها مقابل زاوية علوية غير بيضاء ← لفّ العلوى لتنتقل للزوايا اليمنى ← لفّ الأيمن لإبعادها عن الطبقة ← لفّ العلوى لإرجاع الصف ← ثم اتبع (أ أو ب)</div>
+    </div>
+  </div>
+
+  <!-- المرحلة 3 -->
+  <div class="stage c3" onclick="toggle(this)">
+    <div class="stage-header">
+      <div class="stage-num">٣</div>
+      <div>
+        <div class="stage-title">الطبقة الوسطى الكاملة</div>
+        <div class="stage-sub">الوجه الأبيض على اليسار</div>
+      </div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="stage-body">
+      <div class="orient-badge">🧭 الوجه الأبيض على اليسار — ابحث عن حواف الجانب الأيمن</div>
+      <div class="steps">
+        <div class="step"><div class="step-dot">١</div><div>لو ألوانها ليس فيها أصفر ← حرّك الوجه الأيمن ليتطابق مع مركز العلوى أو الأمامى</div></div>
+        <div class="step"><div class="step-dot">٢</div><div>حدد اللون الجانبى للحافة ← بحيث يطابق لونها الوجه الموازى</div></div>
+      </div>
+
+      <div class="part" style="margin-top:14px">
+        <div class="badge">أ — اللون الجانبى للحافة يطابق الوجه الأمامى (نقل الخلية من يمين العلوى)</div>
+        <div class="algo-box">
+          <div class="algo-label">الخوارزمية</div>
+          <div class="algo" dir="ltr">ى أ <span class="dot inv">ى•</span> <span class="dot inv">أ•</span> &nbsp;&nbsp; <span class="dot inv">ى•</span> <span class="dot inv">ع•</span> ى ع</div>
+        </div>
+      </div>
+
+      <div class="part">
+        <div class="badge">ب — اللون الخلفى موجود فى الوجه العلوى (نقل الخلية من يمين الأمامى)</div>
+        <div class="algo-box">
+          <div class="algo-label">الخوارزمية</div>
+          <div class="algo" dir="ltr"><span class="dot inv">ى•</span> <span class="dot inv">ع•</span> ى ع &nbsp;&nbsp; ى أ <span class="dot inv">ى•</span> <span class="dot inv">أ&#x202B;•&#x202C;</span></div>
+        </div>
+      </div>
+
+      <div class="note"><strong>لو لم تكتمل الطبقة الوسطى:</strong> ستجد الحافة المفقودة داخلها ← طبّق أى من الخوارزميتين لإخراجها ← ثم اتبع (أ أو ب)</div>
+    </div>
+  </div>
+
+  <!-- المرحلة 4 -->
+  <div class="stage c4" onclick="toggle(this)">
+    <div class="stage-header">
+      <div class="stage-num">٤</div>
+      <div>
+        <div class="stage-title">الوجه الأصفر الكامل</div>
+        <div class="stage-sub">الوجه الأصفر بالأعلى</div>
+      </div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="part">
+        <div class="part-label">الجزء ١ — علامة الزائد الأصفر</div>
+        <div class="orient-badge">🧭 الوجه الأصفر بالأعلى</div>
+        <div class="algo-box">
+          <div class="algo-label">الخوارزمية</div>
+          <div class="algo" dir="ltr">أ &nbsp;&nbsp; ى ع &nbsp;&nbsp; <span class="dot">ى•</span> <span class="dot">ع•</span> &nbsp;&nbsp; <span class="dot">أ&#x202B;•&#x202C;</span></div>
+        </div>
+        <div class="note" style="margin-top:10px">• لو ظهر خط أفقى أصفر فى الوسط ← كرّر الخوارزمية<br>• لو ظهر شكل L معكوس ← اجعل طرفه الأفقى يسارًا ثم كرّر</div>
+      </div>
+
+      <div class="part">
+        <div class="part-label">الجزء ٢ — الوجه الأصفر الكامل</div>
+        <div class="note" style="margin-bottom:10px"><strong>ملحوظة:</strong> تخطى الجزء الأول — لو الزائد موجود فى الوجه الأصفر</div>
+        <div class="orient-badge">🧭 الوجه الأصفر بالأعلى — ضبط زوايا الطبقة العلوية</div>
+        <div class="steps">
+          <div class="step"><div class="step-dot">١</div><div>لو ظهرت <strong>زاوية صفراء</strong> ← ضعها فى أسفل اليسار</div></div>
+          <div class="step"><div class="step-dot">٢</div><div>لو ظهرت <strong>زاويتان صفراء بوجه واحد</strong> ← اجعله الوجه الأمامى</div></div>
+        </div>
+        <div class="algo-box" style="margin-top:10px">
+          <div class="algo-label">الخوارزمية</div>
+          <div class="algo" dir="ltr">ى ع &nbsp;&nbsp; <span class="dot">ى•</span> ع &nbsp;&nbsp; ى ع ع &nbsp;&nbsp; <span class="dot">ى&#x202B;•&#x202C;</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- المرحلة 5 -->
+  <div class="stage c5" onclick="toggle(this)">
+    <div class="stage-header">
+      <div class="stage-num">٥</div>
+      <div>
+        <div class="stage-title">الإنهاء الكامل</div>
+        <div class="stage-sub">ترتيب المتبقى من المكعب</div>
+      </div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="stage-body">
+
+      <div class="part">
+        <div class="part-label">الجزء ١ — أوجه حرف U</div>
+        <div class="orient-badge">🧭 الوجه الأبيض للأمام — الوجه بحرف U للأعلى</div>
+        <div class="steps">
+          <div class="step"><div class="step-dot">١</div><div>ابحث عن وجه يرسم حرف U ← ضعه للأعلى وكرّر الخوارزمية ← حتى تحصل على وجه كامل وثلاثة (أو أربعة) أوجه حرف U</div></div>
+        </div>
+        <div class="algo-box" style="margin-top:10px">
+          <div class="algo-label">الخوارزمية</div>
+          <div class="algo" dir="ltr">ى س ى ع ع &nbsp;&nbsp; <span class="dot">ى•</span> <span class="dot">س•</span> ى ع ع &nbsp;&nbsp; ى ى</div>
+        </div>
+      </div>
+
+      <div class="part">
+        <div class="part-label">الجزء ٢ — إنهاء المكعب</div>
+        <div class="note" style="margin-bottom:10px"><strong>ملحوظة:</strong> تخطى الجزء الأول — لو الأربع أوجه حرف U أو وجه كامل مع ثلاثة U</div>
+
+        <div class="orient-badge">🧭 أ: الوجه U أمامك • الوجه الكامل على اليسار • الأبيض بالأسفل</div>
+        <div class="algo-box">
+          <div class="algo-label">الخوارزمية أ</div>
+          <div class="algo" dir="ltr">ى ى &nbsp;&nbsp; <span class="dot">ع•</span> <span class="dot">و•</span> <span class="dot">ع•</span> <span class="dot">ع•</span> و <span class="dot">ع•</span> &nbsp;&nbsp; ى ى</div>
+        </div>
+
+        <div class="orient-badge" style="margin-top:12px">🧭 ب: الوجه U أمامك • الوجه الكامل بالخلف • الأبيض بالأسفل</div>
+        <div class="algo-box">
+          <div class="algo-label">الخوارزمية ب</div>
+          <div class="algo" dir="ltr">ى <span class="dot">ع•</span> &nbsp;&nbsp; ى ع ى ع &nbsp;&nbsp; ى <span class="dot">ع•</span> <span class="dot">ى•</span> <span class="dot">ع•</span> &nbsp;&nbsp; ى ى</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function toggle(el) {
+    if (el.classList.contains('open')) {
+      el.classList.remove('open');
+    } else {
+      el.classList.add('open');
+    }
+  }
+</script>
+
+<footer style="text-align:center; margin-top:40px; max-width:700px; margin-inline:auto; padding:20px; color:var(--muted); font-size:0.8rem; border-top:1px solid var(--border);">
+  <div style="margin-bottom:12px; font-size:1rem;">© 2026 Eslam Abdullah (Abo 7oor)</div>
+  <div style="display:flex; justify-content:center; gap:18px; flex-wrap:wrap;">
+
+    <!-- YouTube -->
+    <a href="https://www.youtube.com/@eslamhub" target="_blank" style="color:#ff4444; text-decoration:none;" title="YouTube">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+    </a>
+
+    <!-- TikTok -->
+    <a href="https://www.tiktok.com/@eslamhub" target="_blank" style="color:#f0f0f0; text-decoration:none;" title="TikTok">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/></svg>
+    </a>
+
+    <!-- LinkedIn -->
+    <a href="https://www.linkedin.com/in/eslamhub" target="_blank" style="color:#0a66c2; text-decoration:none;" title="LinkedIn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+    </a>
+
+    <!-- X -->
+    <a href="https://x.com/eslamhub" target="_blank" style="color:#f0f0f0; text-decoration:none;" title="X">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>
+    </a>
+
+    <!-- Facebook -->
+    <a href="https://www.facebook.com/eslamhub" target="_blank" style="color:#3a8eff; text-decoration:none;" title="Facebook">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+    </a>
+
+    <!-- Instagram -->
+    <a href="https://www.instagram.com/eslam.hub" target="_blank" style="color:#e1306c; text-decoration:none;" title="Instagram">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+    </a>
+
+    <!-- GitHub -->
+    <a href="https://github.com/eslamhub" target="_blank" style="color:#f0f0f0; text-decoration:none;" title="GitHub">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+    </a>
+
+    <!-- Pastebin -->
+    <a href="https://pastebin.com/u/eslamhub" target="_blank" style="color:#02a8f3; text-decoration:none;" title="Pastebin">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M4 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm2 4h12v2H6zm0 4h12v2H6zm0 4h8v2H6z"/></svg>
+    </a>
+
+  </div>
+</footer>
+
+</body>
+</html>
